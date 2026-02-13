@@ -99,6 +99,8 @@ def get_tasks(
     page: int = Query(1, ge=1),
     limit: int = Query(10, ge=1, le=100),
     title: Optional[str] = None,
+    startwith: Optional[str] = None,
+    endwith: Optional[str] = None,
 ):
     query = db.query(UserDB)
 
@@ -113,8 +115,18 @@ def get_tasks(
             UserDB.due_date < date.today(), UserDB.status != "completed"
         )
     if title:
-        query = query.filter(UserDB.title.ilike(f"%{title}%"))
+        query = query.filter(UserDB.title.ilike(f"%{title}%")) | UserDB.description.ilike(f"%{title}%")
         
+    if startwith:
+        query = query.filter(
+            UserDB.title.ilike(f"{startwith}%") | UserDB.description.ilike(f"{startwith}%")
+        )
+
+    if endwith:
+        query = query.filter(
+            UserDB.title.ilike(f"%{endwith}") | UserDB.description.ilike(f"%{endwith}")
+        )
+
     offset = (page - 1) * limit
     tasks = query.offset(offset).limit(limit).all()
     return tasks
