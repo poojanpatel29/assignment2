@@ -98,6 +98,7 @@ def get_tasks(
     overdue: Optional[bool] = None,
     page: int = Query(1, ge=1),
     limit: int = Query(10, ge=1, le=100),
+    title: Optional[str] = None,
 ):
     query = db.query(UserDB)
 
@@ -111,6 +112,9 @@ def get_tasks(
         query = query.filter(
             UserDB.due_date < date.today(), UserDB.status != "completed"
         )
+    if title:
+        query = query.filter(UserDB.title.ilike(f"%{title}%"))
+        
     offset = (page - 1) * limit
     tasks = query.offset(offset).limit(limit).all()
     return tasks
